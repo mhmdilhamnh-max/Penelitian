@@ -5,298 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulasi Edukasi Katalis Trimetalik & Kristalografi</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #0f172a; /* Latar belakang biru gelap ultra modern */
-            color: #f8fafc;
-        }
-        .bg-blue-theme {
-            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
-        }
-        /* Kustomisasi scrollbar */
+        body { font-family: 'Poppins', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .bg-blue-theme { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); }
+        /* Kustomisasi Scrollbar & Slider */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+        input[type=range] { accent-color: #3b82f6; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <header class="bg-blue-900/50 backdrop-blur-md border-b border-blue-500/30 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+    <header class="bg-blue-900/50 border-b border-blue-500/30 sticky top-0 z-50 px-6 py-4 flex justify-between items-center backdrop-blur-md">
         <div class="flex items-center space-x-3 cursor-pointer" onclick="bukaMenu('cover')">
             <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/50">K</div>
-            <span class="font-semibold text-lg tracking-wide bg-gradient-to-r from-blue-400 to-indigo-200 bg-clip-text text-transparent">CatalystEdu 3D</span>
+            <span class="font-semibold text-lg text-blue-200">CatalystEdu 3D</span>
         </div>
         <nav class="hidden md:flex space-x-2">
-            <button onclick="bukaMenu('kristal')" class="px-3 py-1.5 text-xs font-medium rounded-md hover:bg-blue-800/60 transition">Struktur Kristal</button>
-            <button onclick="bukaMenu('miller')" class="px-3 py-1.5 text-xs font-medium rounded-md hover:bg-blue-800/60 transition">Indeks Miller</button>
-            <button onclick="bukaMenu('mekanisme')" class="px-3 py-1.5 text-xs font-medium rounded-md hover:bg-blue-800/60 transition">Mekanisme Reaksi</button>
-            <button onclick="bukaMenu('impregnasi')" class="px-3 py-1.5 text-xs font-medium rounded-md hover:bg-blue-800/60 transition">Impregnasi CNS</button>
-            <button onclick="bukaMenu('fermi')" class="px-3 py-1.5 text-xs font-medium rounded-md hover:bg-blue-800/60 transition">Fermi Level</button>
+            <button onclick="bukaMenu('kristal')" class="px-3 py-1.5 text-xs font-medium rounded hover:bg-blue-800 transition">Struktur Kristal</button>
+            <button onclick="bukaMenu('miller')" class="px-3 py-1.5 text-xs font-medium rounded hover:bg-blue-800 transition">Indeks Miller</button>
+            <button onclick="bukaMenu('fermi')" class="px-3 py-1.5 text-xs font-medium rounded hover:bg-blue-800 transition">Fermi Level</button>
+            <button onclick="bukaMenu('mekanisme')" class="px-3 py-1.5 text-xs font-medium rounded hover:bg-blue-800 transition">Mekanisme Reaksi</button>
         </nav>
     </header>
 
-    <main class="flex-grow flex flex-col items-center justify-center p-4 md:p-8">
-        
-        <section id="menu-cover" class="w-full max-w-5xl bg-blue-theme rounded-2xl p-8 border border-blue-500/20 shadow-2xl shadow-blue-900/40 text-center space-y-8">
-            <div class="space-y-3">
-                <span class="text-blue-400 font-semibold tracking-widest text-xs uppercase px-3 py-1 bg-blue-500/10 rounded-full border border-blue-500/20">Media Pembelajaran Digital</span>
-                <h1 class="text-3xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-blue-300 bg-clip-text text-transparent">Simulasi Kristalografi & Katalis Heterogen</h1>
-                <p class="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">Eksplorasi interaktif struktur atomik, orientasi bidang kisi Miller, mekanisme fisisorpsi-kemisorpsi, dan profil energetika paduan trimetalik.</p>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left pt-4">
-                <div onclick="bukaMenu('kristal')" class="group p-5 bg-slate-900/60 border border-slate-800 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-950/40 transition duration-300">
-                    <div class="text-blue-500 text-2xl mb-3 group-hover:scale-110 transition">⚛️</div>
-                    <h3 class="font-semibold text-sm mb-1 text-slate-200">1. Struktur Kristal Logam</h3>
-                    <p class="text-xs text-slate-400">Visualisasi susunan kisi murni FCC, BCC, HCP, serta efek larutan padat bimetalik/trimetalik.</p>
-                </div>
-                <div onclick="bukaMenu('miller')" class="group p-5 bg-slate-900/60 border border-slate-800 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-950/40 transition duration-300">
-                    <div class="text-blue-500 text-2xl mb-3 group-hover:scale-110 transition">📐</div>
-                    <h3 class="font-semibold text-sm mb-1 text-slate-200">2. Indeks Miller FCC</h3>
-                    <p class="text-xs text-slate-400">Simulasi pemotongan bidang (hkl) pada matriks Pt, Pt-Ni, dan Pt-Ni-M dilengkapi sumbu XYZ.</p>
-                </div>
-                <div onclick="bukaMenu('mekanisme')" class="group p-5 bg-slate-900/60 border border-slate-800 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-950/40 transition duration-300">
-                    <div class="text-blue-500 text-2xl mb-3 group-hover:scale-110 transition">🔄</div>
-                    <h3 class="font-semibold text-sm mb-1 text-slate-200">3. Mekanisme Reaksi</h3>
-                    <p class="text-xs text-slate-400">Tahapan kinetika reaksi heterogen dari difusi, adsorpsi, reaksi permukaan, hingga desorpsi.</p>
-                </div>
-                <div onclick="bukaMenu('impregnasi')" class="group p-5 bg-slate-900/60 border border-slate-800 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-950/40 transition duration-300">
-                    <div class="text-blue-500 text-2xl mb-3 group-hover:scale-110 transition">🧪</div>
-                    <h3 class="font-semibold text-sm mb-1 text-slate-200">4. Metode Impregnasi</h3>
-                    <p class="text-xs text-slate-400">Animasi percampuran prekursor logam hingga proses deposisi ke dalam pori Carbon Nanospheres (CNS).</p>
-                </div>
-                <div onclick="bukaMenu('fermi')" class="group p-5 bg-slate-900/60 border border-slate-800 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-950/40 transition duration-300">
-                    <div class="text-blue-500 text-2xl mb-3 group-hover:scale-110 transition">📊</div>
-                    <h3 class="font-semibold text-sm mb-1 text-slate-200">5. Simulasi Fermi Level</h3>
-                    <p class="text-xs text-slate-400">Analisis pergeseran tingkat energi d-band center akibat efek sinergi ligan multimetalik.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="menu-kristal" class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl p-6 hidden flex-col md:flex-row gap-6">
-            <div class="w-full md:w-1/3 flex flex-col justify-between space-y-4">
-                <div>
-                    <h2 class="text-xl font-bold text-blue-400 mb-2">Simulasi Struktur Kristal</h2>
-                    <p class="text-xs text-slate-400 mb-4">Pilih konfigurasi logam tunggal atau model paduan larutan padat untuk melihat kerapatan tumpukan atom.</p>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Pilih Sistem Logam</label>
-                            <select id="select-logam" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs focus:border-blue-500 outline-none">
-                                <option value="pt">Platina (Pt) - Murni FCC</option>
-                                <option value="ni">Nikal (Ni) - Murni FCC</option>
-                                <option value="fe">Besi (Fe) - Murni BCC</option>
-                                <option value="cr">Kromium (Cr) - Murni BCC</option>
-                                <option value="co">Kobalt (Co) - Murni HCP</option>
-                                <option value="mn">Mangan (Mn) - Kompleks</option>
-                                <option value="ptni">Campuran Bimetalik Pt-Ni (FCC)</option>
-                                <option value="ptnim">Campuran Trimetalik Pt-Ni-M (FCC Alloy)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="bukaMenu('cover')" class="w-full bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white transition rounded-lg py-2 text-xs font-medium">Kembali ke Menu Utama</button>
-            </div>
-            <div class="w-full md:w-2/3 h-96 md:h-[450px] bg-slate-950 rounded-xl relative overflow-hidden border border-slate-800">
-                <div id="canvas-kristal" class="w-full h-full"></div>
-            </div>
-        </section>
-
-        <section id="menu-miller" class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl p-6 hidden flex-col md:flex-row gap-6">
-            <div class="w-full md:w-1/3 flex flex-col justify-between space-y-4">
-                <div>
-                    <h2 class="text-xl font-bold text-blue-400 mb-2">Indeks Miller (hkl) FCC</h2>
-                    <p class="text-xs text-slate-400 mb-4">Representasi bidang kisi internal dan kerapatan atom permukaan yang memotong sumbu X, Y, Z koordinat.</p>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Matriks Katalis</label>
-                            <select class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs outline-none">
-                                <option>Platina (Pt) Murni</option>
-                                <option>Paduan Bimetalik Pt-Ni</option>
-                                <option>Paduan Trimetalik Pt-Ni-M</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-2">Orientasi Bidang Miller</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button class="bg-blue-600 text-white text-xs py-2 rounded-lg font-medium">Bidang (111)</button>
-                                <button class="bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-lg font-medium">Bidang (100)</button>
-                                <button class="bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-lg font-medium">Bidang (110)</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="bukaMenu('cover')" class="w-full bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white transition rounded-lg py-2 text-xs font-medium">Kembali ke Menu Utama</button>
-            </div>
-            <div class="w-full md:w-2/3 h-96 md:h-[450px] bg-slate-950 rounded-xl relative overflow-hidden border border-slate-800">
-                <div id="canvas-miller" class="w-full h-full"></div>
-            </div>
-        </section>
-
-        <section id="menu-mekanisme" class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl p-6 hidden flex-col space-y-4">
-            <h2 class="text-xl font-bold text-blue-400">Mekanisme Reaksi Heterogen (LOHC Dehidrogenasi)</h2>
-            <div class="grid grid-cols-5 gap-2 text-center text-xs">
-                <div class="p-3 bg-blue-950/40 border border-blue-500/30 rounded-lg"><div class="font-bold text-blue-400 mb-1">1. Difusi (In)</div><p class="text-[10px] text-slate-400">Reaktan menuju permukaan katalis</p></div>
-                <div class="p-3 bg-slate-800 rounded-lg"><div class="font-bold text-slate-300 mb-1">2. Adsorpsi</div><p class="text-[10px] text-slate-400">Penempelan reaktan di situs aktif</p></div>
-                <div class="p-3 bg-slate-800 rounded-lg"><div class="font-bold text-slate-300 mb-1">3. Reaksi</div><p class="text-[10px] text-slate-400">Pemutusan ikatan kimia (C-H)</p></div>
-                <div class="p-3 bg-slate-800 rounded-lg"><div class="font-bold text-slate-300 mb-1">4. Desorpsi</div><p class="text-[10px] text-slate-400">Pelepasan produk dari permukaan</p></div>
-                <div class="p-3 bg-slate-800 rounded-lg"><div class="font-bold text-slate-300 mb-1">5. Difusi (Out)</div><p class="text-[10px] text-slate-400">Produk bergerak menjauhi pori</p></div>
-            </div>
-            <div class="h-64 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center">
-                <p class="text-xs text-slate-500">[Kanvas Animasi Interaktif Partikel Gas/Cair Teradsorpsi pada Permukaan Logam]</p>
-            </div>
-            <button onclick="bukaMenu('cover')" class="self-start px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white transition rounded-lg text-xs font-medium">Kembali ke Menu Utama</button>
-        </section>
-
-        <section id="menu-impregnasi" class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl p-6 hidden flex-col space-y-4">
-            <h2 class="text-xl font-bold text-blue-400">Proses Sintesis Impregnasi Katalis PtNi-M/CNS</h2>
-            <div class="flex flex-col md:flex-row gap-6">
-                <div class="w-full md:w-1/3 space-y-4 text-xs">
-                    <p class="text-slate-400 leading-relaxed">Simulasi ini menggambarkan larutan garam prekursor logam (Pt, Ni, M) yang dicampur homogen, kemudian bermigrasi dan masuk ke dalam jaringan pori internal penyangga *Carbon Nanospheres* (CNS).</p>
-                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition">Mulai Animasi Impregnasi</button>
-                </div>
-                <div class="w-full md:w-2/3 h-64 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center">
-                    <p class="text-xs text-slate-500">[Kanvas Animasi Prekursor Logam Masuk dan Terjangkar ke Struktur Bola Karbon Pori]</p>
-                </div>
-            </div>
-            <button onclick="bukaMenu('cover')" class="self-start px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white transition rounded-lg text-xs font-medium">Kembali ke Menu Utama</button>
-        </section>
-
-        <section id="menu-fermi" class="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl p-6 hidden flex-col space-y-4">
-            <h2 class="text-xl font-bold text-blue-400">Modifikasi Elektronik & Pergeseran Fermi Level ($E_F$)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-center space-y-3">
-                    <span class="font-bold text-slate-300 block">Katalis Pt Murni</span>
-                    <div class="h-24 bg-slate-900 flex flex-col justify-end p-2 border-l border-b border-slate-700"><div class="h-16 bg-blue-600/40 w-full border-t-2 border-blue-400 relative"><span class="absolute -top-5 right-0 text-[9px] text-blue-400">Ef (Pt)</span></div></div>
-                    <p class="text-[11px] text-slate-400">Pusat pita-d terlalu tinggi, ikatan adsorpsi produk cenderung terlalu kuat.</p>
-                </div>
-                <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-center space-y-3">
-                    <span class="font-bold text-blue-400 block">Paduan Bimetalik Pt-Ni</span>
-                    <div class="h-24 bg-slate-900 flex flex-col justify-end p-2 border-l border-b border-slate-700"><div class="h-12 bg-indigo-600/40 w-full border-t-2 border-indigo-400 relative"><span class="absolute -top-5 right-0 text-[9px] text-indigo-400">Ef (Pt-Ni)</span></div></div>
-                    <p class="text-[11px] text-slate-400">Terjadi perpindahan rapatan elektron, tingkat energi sedikit turun mendesorpsi produk.</p>
-                </div>
-                <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-center space-y-3">
-                    <span class="font-bold text-emerald-400 block">Paduan Trimetalik Pt-Ni-M</span>
-                    <div class="h-24 bg-slate-900 flex flex-col justify-end p-2 border-l border-b border-slate-700"><div class="h-9 bg-emerald-600/40 w-full border-t-2 border-emerald-400 relative"><span class="absolute -top-5 right-0 text-[9px] text-emerald-400">Ef (Pt-Ni-M)</span></div></div>
-                    <p class="text-[11px] text-slate-400">Konfigurasi optimal ligan, *d-band center* bergeser ideal untuk efisiensi reaksi maksimum.</p>
-                </div>
-            </div>
-            <button onclick="bukaMenu('cover')" class="self-start px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white transition rounded-lg text-xs font-medium">Kembali ke Menu Utama</button>
-        </section>
-
-    </main>
-
-    <footer class="bg-slate-950 text-slate-600 text-center py-4 border-t border-slate-900 text-xs">
-        &copy; 2026 Laboratorium Material Maju & Katalisis. Dibuat dengan Three.js & Tailwind CSS.
-    </footer>
-
-    <script>
-        // 1. LOGIKA ROUTING MENU (SPA NAVIGATION)
-        function bukaMenu(idMenu) {
-            // Sembunyikan semua section terlebih dahulu
-            document.getElementById('menu-cover').style.display = 'none';
-            document.getElementById('menu-kristal').style.display = 'none';
-            document.getElementById('menu-miller').style.display = 'none';
-            document.getElementById('menu-mekanisme').style.display = 'none';
-            document.getElementById('menu-impregnasi').style.display = 'none';
-            document.getElementById('menu-fermi').style.display = 'none';
-
-            // Tampilkan menu yang dipilih
-            const targetSection = document.getElementById(`menu-${idMenu}`);
-            if (idMenu === 'kristal' || idMenu === 'miller') {
-                targetSection.style.display = 'flex'; // untuk tata letak flexbox
-                // Trigger pemicu ukuran ulang kanvas 3D agar tidak distorsi
-                setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 50);
-            } else {
-                targetSection.style.display = 'flex';
-            }
-        }
-
-        // 2. INITIALIZATION THREE.JS UNTUK KANVAS KRISTAL & MILLER
-        function initThreeJS(containerId, isMiller = false) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x020617); // Warna serasi dengan latar belakang web
-
-            const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(5, 5, 8);
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            container.appendChild(renderer.domElement);
-
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-
-            // Pencahayaan lingkungan dan terarah
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            dirLight.position.set(5, 10, 7);
-            scene.add(dirLight);
-
-            // Jika menu indeks miller, tambahkan penanda sumbu X, Y, Z koordinat
-            if (isMiller) {
-                const axesHelper = new THREE.AxesHelper(3);
-                scene.add(axesHelper);
-                
-                // Representasi Bidang (111) Segitiga Transparan
-                const geometriBidang = new THREE.BufferGeometry();
-                const koordinatSudut = new Float32Array([
-                    2, 0, 0,  // Titik potong X
-                    0, 2, 0,  // Titik potong Y
-                    0, 0, 2   // Titik potong Z
-                ]);
-                geometriBidang.setAttribute('position', new THREE.BufferAttribute(koordinatSudut, 3));
-                geometriBidang.setIndex([0, 1, 2]);
-                const materialBidang = new THREE.MeshBasicMaterial({ color: 0x3b82f6, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
-                const meshBidang = new THREE.Mesh(geometriBidang, materialBidang);
-                scene.add(meshBidang);
-            }
-
-            // Representasi Contoh Unit Sel Kubus (Membuat Atom Sudut)
-            const geometriAtom = new THREE.SphereGeometry(0.3, 32, 32);
-            const materialPt = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.2, metalness: 0.8 }); // Logam abu silver
-            
-            // Render kisi koordinat dasar unit sel sederhana
-            for(let x=0; x<=2; x+=2) {
-                for(let y=0; y<=2; y+=2) {
-                    for(let z=0; z<=2; z+=2) {
-                        const atom = new THREE.Mesh(geometriAtom, materialPt);
-                        atom.position.set(x-1, y-1, z-1);
-                        scene.add(atom);
-                    }
-                }
-            }
-
-            // Fungsi Loop Animasi Frame
-            function animate() {
-                requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene, camera);
-            }
-            animate();
-
-            // Atur responsivitas kanvas saat ukuran browser berubah
-            window.addEventListener('resize', () => {
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
-            });
-        }
-
-        // Jalankan mesin grafik 3D setelah halaman selesai dimuat sepenuhnya
-        window.onload = () => {
-            initThreeJS('canvas-kristal', false);
-            initThreeJS('canvas-miller', true);
-        };
-    </script>
-</body>
-</html>
+    <main class="flex-grow flex flex-col items-center justify-center
