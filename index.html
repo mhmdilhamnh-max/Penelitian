@@ -45,7 +45,10 @@
 <body class="min-h-screen flex flex-col">
 
     <header style="background: var(--bg-card); border-bottom: 1px solid var(--border);" class="sticky top-0 z-50 px-4 py-2 flex flex-wrap justify-between items-center">
-        <span style="font-size:1rem; font-weight:700; color:var(--text-dark);" class="cursor-pointer" onclick="bukaMenu('cover')">🔬 KatalisEdu</span>
+        
+        <span style="font-size:1rem; font-weight:700; color:var(--text-dark);" class="cursor-pointer" onclick="bukaMenu('cover')">
+            🔬 KatalisEdu
+        </span>
         <nav class="flex gap-2 flex-wrap mt-1 md:mt-0">
             <button onclick="bukaMenu('impregnasi')" id="navbtn-impregnasi" class="btn-nav">1. Impregnasi</button>
             <button onclick="bukaMenu('kristal')" id="navbtn-kristal" class="btn-nav">2. Kristal & Miller</button>
@@ -59,7 +62,8 @@
 
     <section id="menu-cover" class="card p-10 md:p-16 text-center space-y-6" style="background: linear-gradient(135deg, #e8f4ff 0%, #dbeafe 100%);">
         <p class="label-small" style="color:var(--accent-blue);">Visualisasi Interaktif · Penelitian Material Maju</p>
-        <h1 id="judul-cover" style="font-size:2.2rem; font-weight:700; color:var(--text-dark); line-height:1.2;" contenteditable="true" title="Klik untuk mengedit judul">
+        
+        <h1 id="judul-cover" style="font-size:2.2rem; font-weight:700; color:var(--text-dark); line-height:1.2;">
             Visualisasi Katalis Trimetalik PtNi-M untuk Reaksi Dehidrogenasi MCH
         </h1>
         <p style="color:var(--text-mid); font-size:0.9rem; max-width:600px; margin:0 auto; line-height:1.7;">
@@ -68,7 +72,6 @@
         <div class="flex justify-center gap-3 flex-wrap mt-4">
             <button onclick="bukaMenu('impregnasi')" class="btn-primary" style="padding:0.7rem 2rem; font-size:0.9rem;">Mulai Simulasi →</button>
         </div>
-        <p style="font-size:0.7rem; color:var(--text-light);">✏️ Klik pada judul di atas untuk mengedit</p>
     </section>
 
     <section id="menu-impregnasi" class="hidden card p-5 flex-col md:flex-row gap-5">
@@ -218,7 +221,6 @@
     </main>
 
 <script>
-// ===================== NAVIGASI &inisialisasi =====================
 let modulInisiasi = { kristal: false, mekanisme: false, impregnasi: false, fermi: false };
 
 function bukaMenu(id) {
@@ -233,14 +235,11 @@ function bukaMenu(id) {
     const nb = document.getElementById('navbtn-'+id);
     if(nb) nb.classList.add('active');
     
-    // Memberikan jeda waktu agak lama (100ms) agar elemen div ter-render ukurannya sebelum Three.js menghitung canvas
     setTimeout(() => {
         if(id==='kristal' && !modulInisiasi.kristal) { initKristal(); modulInisiasi.kristal=true; }
         if(id==='mekanisme' && !modulInisiasi.mekanisme) { initMekanisme(); modulInisiasi.mekanisme=true; }
         if(id==='impregnasi' && !modulInisiasi.impregnasi) { initImpregnasi(); modulInisiasi.impregnasi=true; }
         if(id==='fermi' && !modulInisiasi.fermi) { initFermi(); modulInisiasi.fermi=true; }
-        
-        // Paksa resize untuk memastikan ukuran tidak terdistorsi (pencegah blank)
         window.dispatchEvent(new Event('resize'));
     }, 100);
 }
@@ -256,10 +255,7 @@ function initKristal() {
     
     scKristal = new THREE.Scene();
     scKristal.background = null;
-    
-    // Pencegahan pembagian nilai 0 saat render awal
-    const w = wadah.clientWidth || 800;
-    const h = wadah.clientHeight || 500;
+    const w = wadah.clientWidth || 800; const h = wadah.clientHeight || 500;
 
     camKristal = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
     camKristal.position.set(8, 6, 10);
@@ -267,7 +263,6 @@ function initKristal() {
     renKristal = new THREE.WebGLRenderer({ antialias:true, alpha:true });
     renKristal.setPixelRatio(window.devicePixelRatio);
     renKristal.setSize(w, h);
-    renKristal.setClearColor(0x000000, 0);
     wadah.appendChild(renKristal.domElement);
     
     const controls = new THREE.OrbitControls(camKristal, renKristal.domElement);
@@ -296,30 +291,23 @@ function initKristal() {
         }
     }).observe(wadah);
     
-    function animate() { 
-        requestAnimationFrame(animate); 
-        controls.update(); 
-        renKristal.render(scKristal, camKristal); 
-    }
-    animate();
-    updateModulKristal();
+    function animate() { requestAnimationFrame(animate); controls.update(); renKristal.render(scKristal, camKristal); }
+    animate(); updateModulKristal();
 }
 
 function terapkanKomposisi() {
-    let pt = parseFloat(document.getElementById('input-pt').value) || 0;
-    let ni = parseFloat(document.getElementById('input-ni').value) || 0;
-    let m = parseFloat(document.getElementById('input-m').value) || 0;
-    
-    // Normalisasi manual oleh user, tidak saling mempengaruhi
-    komposisi = { pt: pt, ni: ni, m: m };
+    komposisi = {
+        pt: parseFloat(document.getElementById('input-pt').value) || 0,
+        ni: parseFloat(document.getElementById('input-ni').value) || 0,
+        m: parseFloat(document.getElementById('input-m').value) || 0
+    };
     generateLattice();
 }
 
 function updateModulKristal() {
     const j=document.getElementById('pilih-logam').value;
     document.getElementById('panel-komposisi').style.display = (j==='ptnim') ? 'flex' : 'none';
-    generateLattice();
-    clearMillerPlane();
+    generateLattice(); clearMillerPlane();
 }
 
 function generateLattice() {
@@ -327,8 +315,7 @@ function generateLattice() {
     while(grpKristal.children.length>0) grpKristal.remove(grpKristal.children[0]);
     
     const jenis = document.getElementById('pilih-logam').value;
-    const r = 2;
-    let atomCoords = [];
+    const r = 2; let atomCoords = [];
     
     function fccCell(ox,oy,oz) {
         const corners = [[0,0,0],[r,0,0],[0,r,0],[r,r,0],[0,0,r],[r,0,r],[0,r,r],[r,r,r]];
@@ -337,22 +324,18 @@ function generateLattice() {
     }
     
     if(jenis==='ptnim'||jenis==='pt'||jenis==='ni') {
-        for(let ix=0;ix<2;ix++) for(let iy=0;iy<2;iy++) {
-            atomCoords.push(...fccCell(ix*r, iy*r, 0));
-        }
+        for(let ix=0;ix<2;ix++) for(let iy=0;iy<2;iy++) atomCoords.push(...fccCell(ix*r, iy*r, 0));
         drawLatticeBox(r*2, r*2, r);
     } else if(jenis==='fe'||jenis==='cr'||jenis==='mn') {
         for(let ix=0;ix<2;ix++) for(let iy=0;iy<2;iy++) {
-            const ox=ix*r, oy=iy*r;
-            const c = [[0,0,0],[r,0,0],[0,r,0],[r,r,0],[0,0,r],[r,0,r],[0,r,r],[r,r,r]];
+            const ox=ix*r, oy=iy*r, c = [[0,0,0],[r,0,0],[0,r,0],[r,r,0],[0,0,r],[r,0,r],[0,r,r],[r,r,r]];
             atomCoords.push(...c.map(p=>[p[0]+ox,p[1]+oy,p[2]]), [r/2+ox,r/2+oy,r/2]);
         }
         drawLatticeBox(r*2, r*2, r);
     } else if(jenis==='co') {
         let h=3.5, a=1.6;
         for(let layer=0;layer<3;layer++) {
-            const oy=layer*h/2;
-            const isA = (layer%2===0);
+            const oy=layer*h/2, isA = (layer%2===0);
             if(isA) {
                 for(let i=0;i<6;i++) { const ang=(i/6)*Math.PI*2; atomCoords.push([Math.cos(ang)*a, oy, Math.sin(ang)*a]); }
                 atomCoords.push([0,oy,0]);
@@ -368,7 +351,6 @@ function generateLattice() {
         if(seen.has(key)) return false; seen.add(key); return true;
     });
 
-    // Kalkulasi probabilitas tanpa harus menjumlah 100
     const total = komposisi.pt + komposisi.ni + komposisi.m;
     const pPt = total > 0 ? (komposisi.pt / total) * 100 : 33.3;
     const pNi = total > 0 ? (komposisi.ni / total) * 100 : 33.3;
@@ -386,83 +368,143 @@ function generateLattice() {
             mat = prob < pPt ? matPt : (prob < pPt + pNi ? matNi : matM2);
         }
         const mesh=new THREE.Mesh(geomSphere, mat.clone());
-        mesh.position.set(pos[0],pos[1],pos[2]);
-        grpKristal.add(mesh);
+        mesh.position.set(pos[0],pos[1],pos[2]); grpKristal.add(mesh);
     });
 }
 
 function drawLatticeBox(sx,sy,sz) {
-    const geom = new THREE.BoxGeometry(sx,sy,sz);
-    const edges = new THREE.EdgesGeometry(geom);
-    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0x93c5fd, linewidth:1.5}));
-    line.position.set(sx/2,sy/2,sz/2);
-    grpKristal.add(line);
+    const line = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(sx,sy,sz)), new THREE.LineBasicMaterial({color:0x93c5fd, linewidth:1.5}));
+    line.position.set(sx/2,sy/2,sz/2); grpKristal.add(line);
 }
 
 function applyMillerPlane() {
     clearMillerPlane();
-    const h=parseInt(document.getElementById('miller-h').value)||0;
-    const k=parseInt(document.getElementById('miller-k').value)||0;
-    const l=parseInt(document.getElementById('miller-l').value)||0;
-    const R=4.5;
-    const pts=[];
-    if(h!==0) pts.push(new THREE.Vector3(R/h,0,0));
-    if(k!==0) pts.push(new THREE.Vector3(0,R/k,0));
-    if(l!==0) pts.push(new THREE.Vector3(0,0,R/l));
+    const h=parseInt(document.getElementById('miller-h').value)||0, k=parseInt(document.getElementById('miller-k').value)||0, l=parseInt(document.getElementById('miller-l').value)||0;
+    const R=4.5, pts=[];
+    if(h!==0) pts.push(new THREE.Vector3(R/h,0,0)); if(k!==0) pts.push(new THREE.Vector3(0,R/k,0)); if(l!==0) pts.push(new THREE.Vector3(0,0,R/l));
     while(pts.length<3) {
         if(pts.length===0) { pts.push(new THREE.Vector3(R,0,0),new THREE.Vector3(0,R,0),new THREE.Vector3(0,0,R)); break; }
         if(pts.length===1) { pts.push(new THREE.Vector3(0,R,0),new THREE.Vector3(0,0,R)); }
         if(pts.length===2) { pts.push(new THREE.Vector3(pts[0].x+pts[1].x, pts[0].y+pts[1].y, R)); }
     }
-    const geom=new THREE.BufferGeometry();
-    const verts=[];
-    const center=new THREE.Vector3().addVectors(pts[0],pts[1]).add(pts[2]).divideScalar(3);
+    const geom=new THREE.BufferGeometry(), verts=[], center=new THREE.Vector3().addVectors(pts[0],pts[1]).add(pts[2]).divideScalar(3);
     for(let i=0;i<pts.length;i++) {
-        verts.push(center.x,center.y,center.z);
-        verts.push(pts[i].x,pts[i].y,pts[i].z);
-        verts.push(pts[(i+1)%pts.length].x,pts[(i+1)%pts.length].y,pts[(i+1)%pts.length].z);
+        verts.push(center.x,center.y,center.z, pts[i].x,pts[i].y,pts[i].z, pts[(i+1)%pts.length].x,pts[(i+1)%pts.length].y,pts[(i+1)%pts.length].z);
     }
-    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts),3));
-    geom.computeVertexNormals();
+    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts),3)); geom.computeVertexNormals();
     planeMesh=new THREE.Mesh(geom, new THREE.MeshBasicMaterial({color:0xf472b6, side:THREE.DoubleSide, transparent:true, opacity:0.5}));
     scKristal.add(planeMesh);
 }
-
 function clearMillerPlane() { if(planeMesh){scKristal.remove(planeMesh);planeMesh=null;} }
 
 
 // ===================== MODUL 2: MEKANISME =====================
 let scMech, camMech, renMech, orbMech;
 let mechMCH=null, mechTime=0, mechStep=1;
-// Implementasi ringkas untuk MCH (mengikuti kode awal Bapak)
 function initMekanisme() {
     const wadah=document.getElementById('wadah-mekanisme');
     scMech=new THREE.Scene(); scMech.background=null;
     const w = wadah.clientWidth || 800; const h = wadah.clientHeight || 500;
-    camMech=new THREE.PerspectiveCamera(45,w/h,0.1,200);
-    camMech.position.set(0,8,18);
-    renMech=new THREE.WebGLRenderer({antialias:true,alpha:true});
-    renMech.setPixelRatio(window.devicePixelRatio);
-    renMech.setSize(w,h);
+    camMech=new THREE.PerspectiveCamera(45,w/h,0.1,200); camMech.position.set(0,8,18);
+    renMech=new THREE.WebGLRenderer({antialias:true,alpha:true}); renMech.setPixelRatio(window.devicePixelRatio); renMech.setSize(w,h);
     wadah.appendChild(renMech.domElement);
     orbMech=new THREE.OrbitControls(camMech,renMech.domElement);
+    scMech.add(new THREE.AmbientLight(0xffffff,1.0)); const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(5,10,5); scMech.add(dl);
     
-    scMech.add(new THREE.AmbientLight(0xffffff,1.0));
-    const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(5,10,5); scMech.add(dl);
-    
-    // Build Catalyst Surface Dummy
-    const surf = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 10), new THREE.MeshStandardMaterial({color:0x94a3b8}));
-    surf.position.y = -2; scMech.add(surf);
-
-    // Build MCH Dummy
-    mechMCH = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), new THREE.MeshStandardMaterial({color:0x3b82f6}));
-    scMech.add(mechMCH);
+    const surf = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 10), new THREE.MeshStandardMaterial({color:0x94a3b8})); surf.position.y = -2; scMech.add(surf);
+    mechMCH = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), new THREE.MeshStandardMaterial({color:0x3b82f6})); scMech.add(mechMCH);
 
     function animate(){
-        requestAnimationFrame(animate);
-        orbMech.update();
-        mechTime += 0.02;
-        
+        requestAnimationFrame(animate); orbMech.update(); mechTime += 0.02;
         if(mechStep===1) { mechMCH.position.set(Math.sin(mechTime)*2, 5, 0); }
         else if (mechStep===2) { mechMCH.position.lerp(new THREE.Vector3(0, -0.5, 0), 0.05); }
-        else if (mechStep===3)
+        else if (mechStep===3) { mechMCH.material.color.setHex(0xf472b6); }
+        else if (mechStep===4) { mechMCH.position.lerp(new THREE.Vector3(0, 3, 0), 0.05); }
+        else if (mechStep===5) { mechMCH.position.lerp(new THREE.Vector3(8, 6, 0), 0.05); }
+        renMech.render(scMech,camMech);
+    }
+    animate(); setMechState(1);
+}
+function setMechState(step) {
+    mechStep=step; if(step===1) mechMCH.material.color.setHex(0x3b82f6);
+    const desc=document.getElementById('deskripsi-mech');
+    const descs=["","① Difusi: Molekul MCH mendekati katalis.","② Adsorpsi: MCH menempel pada permukaan situs aktif.","③ Reaksi Dehidrogenasi: Pemutusan ikatan C-H.","④ Desorpsi: Produk Toluena bersiap lepas.","⑤ Difusi Keluar: Molekul menjauh dari permukaan."];
+    if(desc) desc.innerHTML = descs[step]||'';
+}
+
+// ===================== MODUL 3: IMPREGNASI =====================
+let scImp, camImp, renImp, grpIon, daftarIon=[];
+function initImpregnasi() {
+    const wadah=document.getElementById('wadah-impregnasi');
+    scImp=new THREE.Scene(); scImp.background=null;
+    const w = wadah.clientWidth || 800; const h = wadah.clientHeight || 500;
+    camImp=new THREE.PerspectiveCamera(40,w/h,0.1,100); camImp.position.set(0,3,22);
+    renImp=new THREE.WebGLRenderer({antialias:true,alpha:true}); renImp.setSize(w,h); wadah.appendChild(renImp.domElement);
+    const orbImp=new THREE.OrbitControls(camImp,renImp.domElement); scImp.add(new THREE.AmbientLight(0xffffff,0.9));
+    scImp.add(new THREE.Mesh(new THREE.CylinderGeometry(4, 3, 6, 32, 1, true), new THREE.MeshStandardMaterial({color:0x334155, side:THREE.DoubleSide})));
+    grpIon=new THREE.Group(); scImp.add(grpIon);
+
+    function animate(){
+        requestAnimationFrame(animate); orbImp.update();
+        daftarIon.forEach(ion=>{ if(ion.mesh.position.y>ion.targetY) ion.mesh.position.y-=ion.speed; });
+        renImp.render(scImp,camImp);
+    }
+    animate();
+}
+function mulaiImpregnasi(tipe) {
+    while(grpIon.children.length>0) grpIon.remove(grpIon.children[0]); daftarIon=[];
+    const desc=document.getElementById('deskripsi-impreg');
+    if(tipe==='sequential') {
+        desc.innerHTML="<strong>Sequential (Satu per Satu):</strong> Pt masuk pertama, disusul Ni, dan M yang dihalangi oleh logam sebelumnya.";
+        for(let i=0;i<10;i++) spawnIon(0xbfcfe8, 8, -2-Math.random()*2, 0.05);
+        setTimeout(()=> { for(let i=0;i<8;i++) spawnIon(0x86efac, 8, -1-Math.random()*2, 0.05); }, 1500);
+    } else {
+        desc.innerHTML="<strong>Co-Impregnasi:</strong> Semua logam dicampur dan ditambahkan bersamaan, homogen.";
+        for(let i=0;i<10;i++) spawnIon(0xbfcfe8, 8, -2-Math.random()*2, 0.05); for(let i=0;i<8;i++) spawnIon(0x86efac, 8, -2-Math.random()*2, 0.05); for(let i=0;i<6;i++) spawnIon(0xfca5a5, 8, -2-Math.random()*2, 0.05);
+    }
+}
+function spawnIon(color, startY, targetY, speed) {
+    const m=new THREE.Mesh(new THREE.SphereGeometry(0.3,14,14), new THREE.MeshStandardMaterial({color:color}));
+    m.position.set((Math.random()-0.5)*4, startY, (Math.random()-0.5)*4); grpIon.add(m); daftarIon.push({mesh:m, targetY:targetY, speed:speed});
+}
+
+// ===================== MODUL 4: FERMI LEVEL =====================
+let canvasFermi, ctxFermi, dbandCenter=0, targetDband=0, animFermiId=null;
+function initFermi() {
+    canvasFermi=document.getElementById('canvas-fermi'); ctxFermi=canvasFermi.getContext('2d');
+    const rect=canvasFermi.parentElement.getBoundingClientRect();
+    canvasFermi.width=rect.width||600; canvasFermi.height=rect.height||480;
+    targetDband=canvasFermi.height*0.35; dbandCenter=targetDband;
+    if(!animFermiId) loopFermi(); animasiFermi();
+}
+function animasiFermi() {
+    const tipe = document.getElementById('pilih-fermi').value, desc = document.getElementById('deskripsi-fermi'), h = canvasFermi ? canvasFermi.height : 480;
+    document.getElementById('panel-slider-fermi').style.display = (tipe === 'ptnim') ? 'flex' : 'none';
+    if(tipe === 'pt') { targetDband = h * 0.30; desc.innerHTML = "<strong>Pt Murni:</strong> d-band center sangat dekat dengan Level Fermi. Adsorpsi MCH sangat kuat, sulit lepas (teracuni produk)."; }
+    else if(tipe === 'ptni') { targetDband = h * 0.52; desc.innerHTML = "<strong style='color:#16a34a'>Pt-Ni Bimetalik:</strong> Aloy Ni mengubah struktur elektronik. d-band center turun, adsorpsi mulai melemah."; }
+    else { let shiftRatio = parseFloat(document.getElementById('slider-manual-fermi').value) / 100; targetDband = h * (0.65 - shiftRatio); desc.innerHTML = `<strong style='color:#3b82f6'>Pt-Ni-M Trimetalik:</strong> Menggunakan modifikator (logam M), Anda bisa melihat bagaimana penarikan elektron menggeser d-band. <strong>Geser slider</strong> untuk bereksperimen mencari posisi energi optimal (tidak terlalu kuat, tidak terlalu lemah).`; }
+}
+function loopFermi() {
+    animFermiId=requestAnimationFrame(loopFermi); if(!ctxFermi) return;
+    dbandCenter+=(targetDband-dbandCenter)*0.04; 
+    const w=canvasFermi.width, h=canvasFermi.height, fermiY=h*0.18; ctxFermi.clearRect(0,0,w,h);
+    const bg=ctxFermi.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#e8f0fe'); bg.addColorStop(1,'#dbeafe'); ctxFermi.fillStyle=bg; ctxFermi.fillRect(0,0,w,h);
+    ctxFermi.strokeStyle='#94a3b8'; ctxFermi.lineWidth=1.5; ctxFermi.beginPath(); ctxFermi.moveTo(55,20); ctxFermi.lineTo(55,h-20); ctxFermi.stroke();
+    
+    const sigma=h*0.12; ctxFermi.fillStyle='rgba(59,130,246,0.3)'; ctxFermi.strokeStyle='#3b82f6'; ctxFermi.lineWidth=2.5; ctxFermi.beginPath(); ctxFermi.moveTo(55,h-20);
+    for(let y=h-20;y>=20;y-=2){ const diff=y-dbandCenter; const bell=Math.exp(-(diff*diff)/(2*sigma*sigma))*(w*0.58); ctxFermi.lineTo(55+bell,y); }
+    ctxFermi.lineTo(55,20); ctxFermi.fill(); ctxFermi.stroke();
+
+    ctxFermi.strokeStyle='#ef4444'; ctxFermi.setLineDash([7,5]); ctxFermi.beginPath(); ctxFermi.moveTo(45,fermiY); ctxFermi.lineTo(w-15,fermiY); ctxFermi.stroke();
+    ctxFermi.setLineDash([]); ctxFermi.fillStyle='#ef4444'; ctxFermi.font='bold 11px Poppins,sans-serif'; ctxFermi.fillText("E_F = 0", w-75, fermiY-7);
+
+    ctxFermi.strokeStyle='#1e3a5f'; ctxFermi.setLineDash([4,4]); ctxFermi.beginPath(); ctxFermi.moveTo(45,dbandCenter); ctxFermi.lineTo(w-15,dbandCenter); ctxFermi.stroke();
+    ctxFermi.setLineDash([]); ctxFermi.fillStyle='#1e3a5f'; ctxFermi.fillText("ε_d (d-band center)", w-160, dbandCenter-7);
+    
+    ctxFermi.fillStyle='rgba(134,239,172,0.15)'; ctxFermi.fillRect(55, h*0.55, w-70, h*0.25);
+    ctxFermi.fillStyle='rgba(22,163,74,0.8)'; ctxFermi.fillText("⬤ Zona Optimal (Desorpsi/Adsorpsi Seimbang)", 60, h*0.78);
+}
+window.onload = () => { bukaMenu('cover'); };
+</script>
+</body>
+</html>
