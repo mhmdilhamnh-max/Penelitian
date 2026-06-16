@@ -611,80 +611,169 @@ function clearMillerPlane() {
 }
 
 // ===================== MODUL 3: MEKANISME =====================
-let scMech, camMech, renMech, grpMech, molekulMCH;
-function initMekanisme() {
-    const wadah = document.getElementById('wadah-mekanisme');
-    if(!wadah) return;
-    scMech = new THREE.Scene(); scMech.background = null;
-    const w = wadah.clientWidth || 500, h = wadah.clientHeight || 500;
-    camMech = new THREE.PerspectiveCamera(45, w/h, 0.1, 100); camMech.position.set(0,5,10);
-    renMech = new THREE.WebGLRenderer({antialias:true, alpha:true});
-    renMech.setSize(w, h); wadah.appendChild(renMech.domElement);
-    const controls = new THREE.OrbitControls(camMech, renMech.domElement);
-    scMech.add(new THREE.AmbientLight(0xffffff, 0.8));
-    const dl = new THREE.DirectionalLight(0xffffff, 0.6); dl.position.set(5,10,5); scMech.add(dl);
+let scMech, camMech, renMech, orbMech;
+let objMCH, objToluene, arrH2 = [];
+let mechTime=0, mechStep=1;
 
-    const surface = new THREE.Mesh(new THREE.BoxGeometry(8, 0.5, 8), new THREE.MeshStandardMaterial({color: 0x94a3b8}));
-    surface.position.y = -0.25; scMech.add(surface);
+function buildMolecule(type) {
+    const group = new THREE.Group();
+    const colorC = type === 'mch' ? 0x3b82f6 : 0xf472b6; 
+    const matC = new THREE.MeshStandardMaterial({color: colorC, roughness:0.4});
+    const matBond = new THREE.MeshStandardMaterial({color: 0x9ca3af});
+    const radC = 0.4; const ringRadius = 1.3;
 
-    grpMech = new THREE.Group(); scMech.add(grpMech);
+    for(let i=0; i<6; i++) {
+        const ang = (i/6) * Math.PI * 2;
+        const c = new THREE.Mesh(new THREE.SphereGeometry(radC, 16, 16), matC);
+        c.position.set(Math.cos(ang)*ringRadius, 0, Math.sin(ang)*ringRadius);
+        group.add(c);
 
-    molekulMCH = new THREE.Mesh(new THREE.SphereGeometry(0.8,16,16), new THREE.MeshStandardMaterial({color: 0x3b82f6})); 
-    molekulMCH.position.set(0, 5, 0); grpMech.add(molekulMCH);
+        const ang2 = ((i+1)/6) * Math.PI * 2;
+        const bond = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, ringRadius*1.1), matBond);
+        bond.position.set((Math.cos(ang)+Math.cos(ang2))*0.5 * ringRadius, 0, (Math.sin(ang)+Math.sin(ang2))*0.5 * ringRadius);
+        bond.lookAt(Math.cos(ang2)*ringRadius, 0, Math.sin(ang2)*ringRadius);
+        bond.rotateX(Math.PI/2);
+        group.add(bond);
+        
+        if(type === 'toluene' && i%2===0) {
+            const bond2 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, ringRadius*1.0), new THREE.MeshStandardMaterial({color:0xff99cc}));
+            bond2.position.copy(bond.position); bond2.position.y += 0.15; 
+            bond2.lookAt(Math.cos(ang2)*ringRadius, 0.15, Math.sin(ang2)*ringRadius);
+            bond2.rotateX(Math.PI/2); group.add(bond2);
+        }
+    }
 
-    function animate() { requestAnimationFrame(animate); controls.update(); renMech.render(scMech, camMech); }
-    animate();
+    const methyl = new THREE.Mesh(new THREE.SphereGeometry(radC, 16, 16), matC);
+    methyl.position.set(ringRadius + 1.2, 0, 0); 
+    group.add(methyl);
+    const mBond = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.2), matBond);
+    mBond.position.set(ringRadius + 0.6, 0, 0); mBond.rotateZ(Math.PI/2);
+    group.add(mBond);
+    return group;
 }
 
-function setMechState(state) {
-    document.getElementById('deskripsi-mech').innerHTML = TEKS_MEKANISME[state];
-    for(let i=1;i<=5;i++) document.getElementById('btn-mech-'+i).classList.remove('active');
-    document.getElementById('btn-mech-'+state).classList.add('active');
+function buildH2() {
+    const group = new THREE.Group();
+    const matH = new THREE.MeshStandardMaterial({color: 0xffffff});
+    const h1 = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), matH);
+    const h2 = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), matH);
+    h1.position.set(-0.3, 0, 0); h2.position.set(0.3, 0, 0);
+    const bond = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6), new THREE.MeshStandardMaterial({color:0x9ca3af}));
+    bond.rotateZ(Math.PI/2);
+    group.add(h1); group.add(h2); group.add(bond);
+    return group;
+}
 
-    // MCH Simulation Mockup
-    if(state === 1) { molekulMCH.position.set(0, 4, 0); molekulMCH.material.color.setHex(0x3b82f6); }
-    if(state === 2) { molekulMCH.position.set(0, 0.6, 0); }
-    if(state === 3) { molekulMCH.material.color.setHex(0xf59e0b); } // MCH bereaksi menjadi Toluena (ubah warna)
-    if(state === 4) { molekulMCH.position.set(0, 2, 0); }
-    if(state === 5) { molekulMCH.position.set(0, 5, 0); }
+function initMekanisme() {
+    const wadah=document.getElementById('wadah-mekanisme');
+    scMech=new THREE.Scene(); scMech.background=null;
+    const w = wadah.clientWidth || 800; const h = wadah.clientHeight || 500;
+    camMech=new THREE.PerspectiveCamera(45,w/h,0.1,200); camMech.position.set(0,8,18);
+    renMech=new THREE.WebGLRenderer({antialias:true,alpha:true}); renMech.setPixelRatio(window.devicePixelRatio); renMech.setSize(w,h);
+    wadah.appendChild(renMech.domElement);
+    orbMech=new THREE.OrbitControls(camMech,renMech.domElement);
+    scMech.add(new THREE.AmbientLight(0xffffff,0.8)); 
+    const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(5,10,5); scMech.add(dl);
+    
+    const surf = new THREE.Mesh(new THREE.BoxGeometry(12, 1, 12), new THREE.MeshStandardMaterial({color:0x94a3b8})); 
+    surf.position.y = -2; scMech.add(surf);
+
+    objMCH = buildMolecule('mch'); scMech.add(objMCH);
+    objToluene = buildMolecule('toluene'); objToluene.visible = false; scMech.add(objToluene);
+    
+    for(let i=0; i<3; i++) {
+        const h2 = buildH2(); h2.visible = false; scMech.add(h2); arrH2.push(h2);
+    }
+
+    function animate(){
+        requestAnimationFrame(animate); orbMech.update(); mechTime += 0.02;
+        
+        if(mechStep===1) { 
+            objMCH.position.set(Math.sin(mechTime)*2, 5 + Math.cos(mechTime)*0.5, 0);
+            objMCH.rotation.y = mechTime * 0.5;
+        }
+        else if (mechStep===2) { 
+            objMCH.position.lerp(new THREE.Vector3(0, -1.0, 0), 0.05); 
+            objMCH.rotation.set(0,0,0);
+        }
+        else if (mechStep===3) { 
+            objToluene.position.lerp(new THREE.Vector3(0, -1.0, 0), 0.1);
+            arrH2[0].position.lerp(new THREE.Vector3(-3, -0.5, 2), 0.1);
+            arrH2[1].position.lerp(new THREE.Vector3(-3, -0.5, -2), 0.1);
+            arrH2[2].position.lerp(new THREE.Vector3(3, -0.5, 2), 0.1);
+            arrH2.forEach(h => h.rotation.y += 0.05);
+        }
+        else if (mechStep===4) { 
+            objToluene.position.lerp(new THREE.Vector3(0, 3, 0), 0.03); 
+            arrH2[0].position.lerp(new THREE.Vector3(-4, 4, 3), 0.04);
+            arrH2[1].position.lerp(new THREE.Vector3(-4, 4, -3), 0.04);
+            arrH2[2].position.lerp(new THREE.Vector3(4, 4, 3), 0.04);
+        }
+        else if (mechStep===5) { 
+            objToluene.position.lerp(new THREE.Vector3(8, 8, 0), 0.05); 
+            arrH2[0].position.lerp(new THREE.Vector3(-10, 10, 5), 0.05);
+            arrH2[1].position.lerp(new THREE.Vector3(-10, 10, -5), 0.05);
+            arrH2[2].position.lerp(new THREE.Vector3(8, 10, 8), 0.05);
+        }
+        renMech.render(scMech,camMech);
+    }
+    animate(); setMechState(1);
+}
+
+function setMechState(step) {
+    mechStep = step; 
+    if(step <= 2) {
+        objMCH.visible = true; objToluene.visible = false; arrH2.forEach(h => h.visible = false);
+    } else {
+        objMCH.visible = false; objToluene.visible = true; arrH2.forEach(h => h.visible = true);
+        if(step === 3) {
+            objToluene.position.set(0, -1, 0);
+            arrH2.forEach(h => h.position.set(0, -1, 0));
+        }
+    }
+
+    // MEMANGGIL VARIABEL TEKS_MEKANISME DI ATAS
+    const desc = document.getElementById('deskripsi-mech');
+    if(desc) desc.innerHTML = TEKS_MEKANISME[step] || '';
 }
 
 // ===================== MODUL 4: FERMI LEVEL =====================
-let ctxFermi;
+let canvasFermi, ctxFermi, dbandCenter=0, targetDband=0, animFermiId=null;
 function initFermi() {
-    const canvas = document.getElementById('canvas-fermi');
-    if(!canvas) return;
-    canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
-    ctxFermi = canvas.getContext('2d');
-    animasiFermi();
+    canvasFermi=document.getElementById('canvas-fermi'); ctxFermi=canvasFermi.getContext('2d');
+    const rect=canvasFermi.parentElement.getBoundingClientRect();
+    canvasFermi.width=rect.width||600; canvasFermi.height=rect.height||480;
+    targetDband=canvasFermi.height*0.35; dbandCenter=targetDband;
+    if(!animFermiId) loopFermi(); animasiFermi();
 }
-
 function animasiFermi() {
-    if(!ctxFermi) return;
-    const jenis = document.getElementById('pilih-fermi').value;
-    const sliderPanel = document.getElementById('panel-slider-fermi');
-    const desc = document.getElementById('deskripsi-fermi');
-
-    let shift = 0;
-    if(jenis === 'pt') { sliderPanel.style.display='none'; desc.innerHTML=TEKS_FERMI_PT; shift = -30; }
-    else if(jenis === 'ptni') { sliderPanel.style.display='none'; desc.innerHTML=TEKS_FERMI_PTNI; shift = 10; }
-    else { sliderPanel.style.display='flex'; desc.innerHTML=TEKS_FERMI_PTNIM; shift = parseInt(document.getElementById('slider-manual-fermi').value); }
-
-    const w = ctxFermi.canvas.width; const h = ctxFermi.canvas.height;
-    ctxFermi.clearRect(0,0,w,h);
-
-    ctxFermi.beginPath(); ctxFermi.moveTo(50, h/2); ctxFermi.lineTo(w-50, h/2);
-    ctxFermi.strokeStyle = '#ef4444'; ctxFermi.lineWidth = 2; ctxFermi.setLineDash([5,5]); ctxFermi.stroke(); ctxFermi.setLineDash([]);
-    ctxFermi.fillStyle = '#ef4444'; ctxFermi.font = '14px Poppins'; ctxFermi.fillText("Level Fermi (E_f)", 50, h/2 - 10);
-
-    const dBandY = h/2 + 40 + shift;
-    ctxFermi.beginPath(); ctxFermi.moveTo(50, dBandY); ctxFermi.lineTo(w-50, dBandY);
-    ctxFermi.strokeStyle = '#3b82f6'; ctxFermi.lineWidth = 3; ctxFermi.stroke();
-    ctxFermi.fillStyle = '#3b82f6'; ctxFermi.fillText("Pusat d-band (ε_d)", 50, dBandY - 10);
-
-    ctxFermi.beginPath(); ctxFermi.moveTo(50, h); ctxFermi.quadraticCurveTo(w/2, dBandY - 100, w-50, h);
-    ctxFermi.fillStyle = 'rgba(59,130,246,0.2)'; ctxFermi.fill();
+    const tipe = document.getElementById('pilih-fermi').value, desc = document.getElementById('deskripsi-fermi'), h = canvasFermi ? canvasFermi.height : 480;
+    document.getElementById('panel-slider-fermi').style.display = (tipe === 'ptnim') ? 'flex' : 'none';
+    
+    // MEMANGGIL VARIABEL TEKS FERMI DI ATAS
+    if(tipe === 'pt') { targetDband = h * 0.30; desc.innerHTML = TEKS_FERMI_PT; }
+    else if(tipe === 'ptni') { targetDband = h * 0.52; desc.innerHTML = TEKS_FERMI_PTNI; }
+    else { let shiftRatio = parseFloat(document.getElementById('slider-manual-fermi').value) / 100; targetDband = h * (0.65 - shiftRatio); desc.innerHTML = TEKS_FERMI_PTNIM; }
 }
+function loopFermi() {
+    animFermiId=requestAnimationFrame(loopFermi); if(!ctxFermi) return;
+    dbandCenter+=(targetDband-dbandCenter)*0.04; 
+    const w=canvasFermi.width, h=canvasFermi.height, fermiY=h*0.18; ctxFermi.clearRect(0,0,w,h);
+    const bg=ctxFermi.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#e8f0fe'); bg.addColorStop(1,'#dbeafe'); ctxFermi.fillStyle=bg; ctxFermi.fillRect(0,0,w,h);
+    
+    ctxFermi.strokeStyle='#94a3b8'; ctxFermi.lineWidth=1.5; ctxFermi.beginPath(); ctxFermi.moveTo(55,20); ctxFermi.lineTo(55,h-20); ctxFermi.stroke();
+    
+    const sigma=h*0.12; ctxFermi.fillStyle='rgba(59,130,246,0.3)'; ctxFermi.strokeStyle='#3b82f6'; ctxFermi.lineWidth=2.5; ctxFermi.beginPath(); ctxFermi.moveTo(55,h-20);
+    for(let y=h-20;y>=20;y-=2){ const diff=y-dbandCenter; const bell=Math.exp(-(diff*diff)/(2*sigma*sigma))*(w*0.58); ctxFermi.lineTo(55+bell,y); }
+    ctxFermi.lineTo(55,20); ctxFermi.fill(); ctxFermi.stroke();
+
+    ctxFermi.strokeStyle='#ef4444'; ctxFermi.setLineDash([7,5]); ctxFermi.beginPath(); ctxFermi.moveTo(45,fermiY); ctxFermi.lineTo(w-15,fermiY); ctxFermi.stroke();
+    ctxFermi.setLineDash([]); ctxFermi.fillStyle='#ef4444'; ctxFermi.font='bold 11px Poppins,sans-serif'; ctxFermi.fillText("E_F = 0", w-75, fermiY-7);
+
+    ctxFermi.strokeStyle='#1e3a5f'; ctxFermi.setLineDash([4,4]); ctxFermi.beginPath(); ctxFermi.moveTo(45,dbandCenter); ctxFermi.lineTo(w-15,dbandCenter); ctxFermi.stroke();
+    ctxFermi.setLineDash([]); ctxFermi.fillStyle='#1e3a5f'; ctxFermi.fillText("ε_d (d-band center)", w-160, dbandCenter-7);
+}
+window.onload = () => { bukaMenu('cover'); };
 </script>
 </body>
 </html>
