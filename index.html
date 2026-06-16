@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisasi Katalis PtNiM - Penelitian</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <style>
+        :root {
+            --bg-main: #e8f0fe;
+            --bg-card: #f0f5ff;
+            --bg-panel: #dbeafe;
+            --accent-blue: #3b82f6;
+            --accent-blue-dark: #2563eb;
+            --text-dark: #1e3a5f;
+            --text-mid: #3b5998;
+            --border: #bfdbfe;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-main); color: var(--text-dark); overflow-x: hidden; margin: 0; }
+        ::-webkit-scrollbar { width: 7px; }
+        ::-webkit-scrollbar-track { background: var(--bg-panel); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 4px; }
+        input[type=range] { accent-color: var(--accent-blue); }
+        canvas { display: block; width: 100%; height: 100%; outline: none; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 1rem; box-shadow: 0 4px 24px rgba(59,130,246,0.08); }
+        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 0.75rem; }
+        .btn-nav { padding: 0.4rem 1rem; font-size: 0.75rem; font-weight: 600; border-radius: 0.5rem; background: rgba(59,130,246,0.12); border: 1px solid var(--border); color: var(--text-dark); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .btn-nav:hover, .btn-nav.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .btn-primary { background: var(--accent-blue); color: white; border: none; border-radius: 0.5rem; padding: 0.5rem 1.2rem; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: var(--accent-blue-dark); }
+        .btn-ghost { background: rgba(59,130,246,0.08); color: var(--text-dark); border: 1px solid var(--border); border-radius: 0.5rem; padding: 0.4rem 0.8rem; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+        .btn-ghost:hover, .btn-ghost.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
+        .label-small { font-size: 0.68rem; font-weight: 600; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.05em; }
+        .section-title { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 0.75rem; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header style="background: var(--bg-card); border-bottom: 1px solid var(--border);" class="sticky top-0 z-50 px-4 py-3 flex justify-center md:justify-end items-center">
+        <nav class="flex gap-2 flex-wrap">
+            <button onclick="bukaMenu('impregnasi')" id="navbtn-impregnasi" class="btn-nav">1. Impregnasi</button>
+            <button onclick="bukaMenu('kristal')" id="navbtn-kristal" class="btn-nav">2. Kristal & Miller</button>
+            <button onclick="bukaMenu('mekanisme')" id="navbtn-mekanisme" class="btn-nav">3. Mekanisme MCH</button>
+            <button onclick="bukaMenu('fermi')" id="navbtn-fermi" class="btn-nav">4. Fermi Level</button>
+        </nav>
+    </header>
+
+    <main class="flex-grow p-3 md:p-5 flex justify-center">
+    <div class="w-full max-w-6xl flex flex-col">
+
+    <section id="menu-cover" class="card p-10 md:p-16 text-center flex flex-col justify-center items-center gap-8" style="background: linear-gradient(135deg, #e8f4ff 0%, #dbeafe 100%); min-height: 70vh;">
+        <h1 id="judul-cover" style="font-size:2.5rem; font-weight:700; color:var(--text-dark); line-height:1.3; max-width: 800px;">
+            Visualisasi Katalis Trimetalik PtNi-M untuk Reaksi Dehidrogenasi MCH
+        </h1>
+        <button onclick="bukaMenu('impregnasi')" class="btn-primary" style="padding:0.8rem 2.5rem; font-size:1rem; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
+            Mulai Simulasi →
+        </button>
+    </section>
+
+    <section id="menu-impregnasi" class="hidden card p-5 flex-col md:flex-row gap-5">
+        <div class="w-full md:w-1/3 flex flex-col gap-3">
+            <h2 class="section-title">Impregnasi Logam pada CNS</h2>
+            <p style="font-size:0.78rem; color:var(--text-mid); line-height:1.6;">Simulasi masuknya prekursor logam ke rongga pori Carbon Nanosphere (CNS).</p>
+
+            <div class="panel p-3 flex flex-col gap-2">
+                <p class="label-small">Pilih Metode Impregnasi</p>
+                <button onclick="mulaiImpregnasi('sequential')" class="btn-primary" style="background:#7c3aed;">🔢 Satu-satu</button>
+                <button onclick="mulaiImpregnasi('coimpreg')" class="btn-primary" style="background:#059669; margin-top:4px;">⚡ Serentak</button>
+            </div>
+
+            <div class="panel p-3 flex flex-col gap-2">
+                <p class="label-small">Legenda Logam</p>
+                <div style="font-size:0.75rem; display:flex; flex-direction:column; gap:4px;">
+                    <span>⚪ <strong>Pt</strong> – Platina</span>
+                    <span style="color:#16a34a;">🟢 <strong>Ni</strong> – Nikel</span>
+                    <span style="color:#d97706;">🟠 <strong>M</strong> – Logam Ketiga</span>
+                </div>
+            </div>
+
+            <div id="deskripsi-impreg" class="panel p-3" style="font-size:0.75rem; color:var(--text-mid); line-height:1.6; min-height:80px;">
+                Pilih metode simulasi di atas.
+            </div>
+        </div>
+        <div class="w-full md:w-2/3 rounded-xl border relative overflow-hidden" style="height:500px; background:linear-gradient(to bottom, #f0f5ff, #e8f0fe); border-color:var(--border);" id="wadah-impregnasi"></div>
+    </section>
+
+    <section id="menu-kristal" class="hidden card p-5 flex-col md:flex-row gap-5">
+        <div class="w-full md:w-1/3 flex flex-col gap-3">
+            <h2 class="section-title">Struktur Kristal & Bidang Miller</h2>
+
+            <div class="panel p-3 flex flex-col gap-2">
+                <p class="label-small">Pilih Logam / Struktur Kristal</p>
+                <select id="pilih-logam" onchange="updateModulKristal()" style="background:var(--bg-main); border:1px solid var(--border); border-radius:0.4rem; padding:0.45rem; font-size:0.8rem; color:var(--text-dark); outline:none; width:100%;">
+                    <option value="ptnim">PtNi-M (FCC - Paduan Trimetalik)</option>
+                    <option value="pt">Pt – Platina (FCC)</option>
+                    <option value="ni">Ni – Nikel (FCC)</option>
+                    <option value="cr">Cr – Kromium (BCC)</option>
+                    <option value="mn">Mn – Mangan (BCC)</option>
+                    <option value="fe">Fe – Besi (BCC)</option>
+                    <option value="co">Co – Kobalt (HCP)</option>
+                </select>
+            </div>
+
+            <div id="panel-komposisi" class="panel p-3 flex flex-col gap-2">
+                <p class="label-small">Komposisi Paduan Trimetalik (%)</p>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.75rem;">
+                        <span>⚪ Pt (Platina)</span>
+                        <input type="number" id="input-pt" min="0" max="100" value="60" style="width:60px; padding:0.2rem; border-radius:0.3rem; border:1px solid var(--border); text-align:center;">
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.75rem; color:#16a34a;">
+                        <span>🟢 Ni (Nikel)</span>
+                        <input type="number" id="input-ni" min="0" max="100" value="20" style="width:60px; padding:0.2rem; border-radius:0.3rem; border:1px solid var(--border); text-align:center;">
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.75rem; color:#d97706;">
+                        <span>🟠 Logam M</span>
+                        <input type="number" id="input-m" min="0" max="100" value="20" style="width:60px; padding:0.2rem; border-radius:0.3rem; border:1px solid var(--border); text-align:center;">
+                    </div>
+                </div>
+                <button onclick="terapkanKomposisi()" class="btn-primary" style="margin-top:4px;">Terapkan Komposisi</button>
+            </div>
+
+            <div class="panel p-3 flex flex-col gap-2">
+                <p class="label-small">Bidang Miller – Masukkan indeks hkl</p>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <div style="flex:1; text-align:center;">
+                        <div style="font-size:0.65rem; font-weight:600; margin-bottom:2px;">h</div>
+                        <input type="number" id="miller-h" value="1" min="-3" max="3" style="width:100%; text-align:center; padding:0.35rem; border:1px solid var(--border); border-radius:0.4rem; background:var(--bg-main); font-size:0.9rem; font-weight:700; color:var(--text-dark); outline:none;">
+                    </div>
+                    <div style="flex:1; text-align:center;">
+                        <div style="font-size:0.65rem; font-weight:600; margin-bottom:2px;">k</div>
+                        <input type="number" id="miller-k" value="1" min="-3" max="3" style="width:100%; text-align:center; padding:0.35rem; border:1px solid var(--border); border-radius:0.4rem; background:var(--bg-main); font-size:0.9rem; font-weight:700; color:var(--text-dark); outline:none;">
+                    </div>
+                    <div style="flex:1; text-align:center;">
+                        <div style="font-size:0.65rem; font-weight:600; margin-bottom:2px;">l</div>
+                        <input type="number" id="miller-l" value="1" min="-3" max="3" style="width:100%; text-align:center; padding:0.35rem; border:1px solid var(--border); border-radius:0.4rem; background:var(--bg-main); font-size:0.9rem; font-weight:700; color:var(--text-dark); outline:none;">
+                    </div>
+                </div>
+                <p id="miller-label" style="font-size:0.75rem; text-align:center; color:var(--accent-blue-dark); font-weight:700; margin-top:4px;">Bidang (111)</p>
+                
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <button onclick="applyMillerPlane()" class="btn-primary" style="flex:1;">Tampilkan Bidang</button>
+                    <button onclick="clearMillerPlane()" class="btn-ghost" style="flex:0.5;">Hapus</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full md:w-2/3 flex justify-center items-center bg-gray-50 rounded-xl border" style="border-color:var(--border);">
+            <div id="wadah-kristal" class="relative overflow-hidden" style="width:100%; height:100%; background:linear-gradient(135deg, #eef4ff, #e0eaff); border-radius:0.5rem; box-shadow:inset 0 0 10px rgba(0,0,0,0.05);">
+                <span style="position:absolute;top:10px;left:10px;font-size:0.65rem;color:var(--text-mid);background:rgba(255,255,255,0.7);padding:3px 8px;border-radius:4px;border:1px solid var(--border);z-index:10;font-family:monospace;">X=Merah | Y=Hijau | Z=Biru</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu-mekanisme" class="hidden card p-5 flex-col md:flex-row gap-5">
+        <div class="w-full md:w-1/3 flex flex-col gap-3">
+            <h2 class="section-title">Mekanisme Dehidrogenasi MCH</h2>
+            <p style="font-size:0.78rem; color:var(--text-mid); line-height:1.6;">
+                Reaksi: <strong>C₇H₁₄ → C₇H₈ + 3H₂</strong>
+            </p>
+            <div class="flex flex-col gap-2">
+                <button onclick="setMechState(1)" id="btn-mech-1" class="btn-ghost text-left" style="padding:0.5rem 0.75rem;">① Difusi (MCH mendekat)</button>
+                <button onclick="setMechState(2)" id="btn-mech-2" class="btn-ghost text-left" style="padding:0.5rem 0.75rem;">② Adsorpsi (MCH menempel)</button>
+                <button onclick="setMechState(3)" id="btn-mech-3" class="btn-ghost text-left" style="padding:0.5rem 0.75rem;">③ Reaksi (Pelepasan H₂)</button>
+                <button onclick="setMechState(4)" id="btn-mech-4" class="btn-ghost text-left" style="padding:0.5rem 0.75rem;">④ Desorpsi (Toluena & H₂ lepas)</button>
+                <button onclick="setMechState(5)" id="btn-mech-5" class="btn-ghost text-left" style="padding:0.5rem 0.75rem;">⑤ Difusi keluar (Selesai)</button>
+            </div>
+            <div id="deskripsi-mech" class="panel p-3 mt-auto" style="font-size:0.75rem; color:var(--text-mid); line-height:1.6; min-height:90px;">Pilih langkah reaksi di atas.</div>
+        </div>
+        <div class="w-full md:w-2/3 rounded-xl border relative overflow-hidden" style="height:500px; background:linear-gradient(to bottom, #eef4ff, #e0eaff); border-color:var(--border);" id="wadah-mekanisme">
+            <span style="position:absolute;bottom:10px;right:10px;font-size:0.75rem;color:var(--text-dark);background:rgba(255,255,255,0.9);padding:5px 12px;border-radius:6px;border:1px solid var(--border);z-index:10;font-weight:700;box-shadow: 0 2px 5px rgba(0,0,0,0.1);">Katalis: PtNiM/CNS</span>
+        </div>
+    </section>
+
+    <section id="menu-fermi" class="hidden card p-5 flex-col md:flex-row gap-5">
+        <div class="w-full md:w-1/3 flex flex-col gap-3">
+            <h2 class="section-title">Pita Elektronik (d-band center)</h2>
+            <p style="font-size:0.72rem; color:var(--text-mid); line-height:1.6;">Posisi d-band center (ε_d) menentukan kekuatan adsorpsi terhadap reaktan maupun produk.</p>
+
+            <div class="panel p-3 flex flex-col gap-2">
+                <p class="label-small">Pilih Sistem Katalis</p>
+                <select id="pilih-fermi" onchange="animasiFermi()" style="background:var(--bg-main); border:1px solid var(--border); border-radius:0.4rem; padding:0.45rem; font-size:0.8rem; color:var(--text-dark); outline:none; width:100%;">
+                    <option value="pt">Pt Murni</option>
+                    <option value="ptni">Pt-Ni Bimetalik</option>
+                    <option value="ptnim">Pt-Ni-M Trimetalik (Tarik Slider di bawah)</option>
+                </select>
+            </div>
+
+            <div id="panel-slider-fermi" class="panel p-3 flex flex-col gap-2" style="display:none;">
+                <p class="label-small">Geser Karakteristik d-band PtNiM</p>
+                <p style="font-size:0.65rem; color:var(--text-mid); line-height:1.4;">Mensimulasikan sifat unik logam ketiga yang menggeser pita elektronik.</p>
+                <input type="range" id="slider-manual-fermi" min="-40" max="40" value="0" class="w-full" oninput="animasiFermi()">
+                <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:var(--text-light);">
+                    <span>Adsorpsi Lemah</span>
+                    <span>Adsorpsi Kuat</span>
+                </div>
+            </div>
+
+            <div id="deskripsi-fermi" class="panel p-3" style="font-size:0.75rem; color:var(--text-mid); line-height:1.6; min-height:80px;"></div>
+        </div>
+
+        <div class="w-full md:w-2/3 rounded-xl border relative overflow-hidden" style="height:500px; background:var(--bg-main); border-color:var(--border);">
+            <canvas id="canvas-fermi" style="width:100%;height:100%;"></canvas>
+        </div>
+    </section>
+
+    <div id="bottom-nav" class="w-full mt-4 flex justify-between items-center" style="display:none;">
+        <button id="btn-prev" onclick="goPrev()" class="btn-primary" style="background:#64748b; padding:0.6rem 1.5rem;">← Sebelumnya</button>
+        <button id="btn-next" onclick="goNext()" class="btn-primary" style="padding:0.6rem 1.5rem;">Selanjutnya →</button>
+    </div>
+
+    </div>
+    </main>
+
+<script>
+// =========================================================================================
+// ✏️ RUANG EDIT TEKS PENJELASAN
+// =========================================================================================
+
+const TEKS_IMPREGNASI_SATU_SATU = `<strong>Metode Satu-satu:</strong><br>
+1. Pt masuk lebih dulu dan berikatan di dasar pori CNS.<br>
+2. Ni masuk, namun terhalang setengah jalan oleh Pt.<br>
+3. Logam M masuk paling akhir. Karena pori tertutup, ia tertahan di luar permukaan dan tidak berikatan, sehingga rentan lepas saat dicuci.`;
+
+const TEKS_IMPREGNASI_SERENTAK = `<strong>Metode Serentak (Co-Impregnasi):</strong><br>
+Ketiga logam (Pt, Ni, M) dilarutkan dan diteteskan bersamaan. Mereka berkompetisi secara merata, berhasil masuk ke dalam pori, dan berikatan langsung dengan rongga CNS menghasilkan paduan yang homogen.`;
+
+const TEKS_MEKANISME = [
+    "", // Langkah 0 (Kosong)
+    "<strong>① Difusi:</strong> Molekul MCH (C₇H₁₄) bergerak mendekati permukaan katalis PtNiM/CNS.",
+    "<strong>② Adsorpsi:</strong> MCH menempel secara fisik dan kimiawi pada situs aktif logam di permukaan katalis.",
+    "<strong>③ Reaksi Dehidrogenasi:</strong> Ikatan C-H terputus berkat sifat elektronik katalis PtNiM/CNS. Cincin MCH berubah menjadi aromatik (Toluena C₇H₈), dan atom hidrogen terlepas membentuk 3 molekul gas H₂.",
+    "<strong>④ Desorpsi:</strong> Interaksi d-band center yang melemah membuat produk Toluena dan H₂ mudah terlepas dari permukaan katalis (sesuai Prinsip Sabatier).",
+    "<strong>⑤ Difusi Keluar:</strong> Molekul produk menjauh dari permukaan, sehingga situs aktif kembali kosong dan siap menerima reaktan baru."
+];
+
+const TEKS_FERMI_PT = "<strong>Pt Murni:</strong> d-band center sangat dekat dengan Level Fermi. Adsorpsi MCH sangat kuat, namun produk sulit mendesorpsi (katalis teracuni).";
+const TEKS_FERMI_PTNI = "<strong style='color:#16a34a'>Pt-Ni Bimetalik:</strong> Efek elektron dari Ni menurunkan d-band center, sehingga adsorpsi mulai melemah dan desorpsi menjadi lebih mudah.";
+const TEKS_FERMI_PTNIM = "<strong style='color:#3b82f6'>Pt-Ni-M Trimetalik:</strong> Geser slider di atas untuk melihat bagaimana modifikator logam M mengubah posisi d-band center untuk mencari titik tengah terbaik antara energi adsorpsi dan desorpsi.";
+
+// =========================================================================================
+// BATAS RUANG EDIT TEKS.
+// =========================================================================================
+
+// --- LOGIKA NAVIGASI MENU BAWAH ---
+const steps = ['cover', 'impregnasi', 'kristal', 'mekanisme', 'fermi'];
+let currentStepIdx = 0;
+
+let modulInisiasi = { kristal: false, mekanisme: false, impregnasi: false, fermi: false };
+
+function bukaMenu(id) {
+    currentStepIdx = steps.indexOf(id);
+    
+    ['cover','kristal','mekanisme','impregnasi','fermi'].forEach(m => {
+        const el = document.getElementById('menu-'+m);
+        if(el) { el.classList.add('hidden'); el.classList.remove('flex', 'flex-col'); }
+        const nb = document.getElementById('navbtn-'+m);
+        if(nb) nb.classList.remove('active');
+    });
+
+    const t = document.getElementById('menu-'+id);
+    if(t) { 
+        t.classList.remove('hidden'); 
+        if(id === 'cover') { t.classList.add('flex', 'flex-col'); } 
+        else { t.classList.add('flex'); }
+    }
+    const nb = document.getElementById('navbtn-'+id);
+    if(nb) nb.classList.add('active');
+
+    // Update state tombol navigasi bawah
+    updateBottomNav();
+    
+    setTimeout(() => {
+        if(id==='kristal' && !modulInisiasi.kristal) { initKristal(); modulInisiasi.kristal=true; }
+        if(id==='mekanisme' && !modulInisiasi.mekanisme) { initMekanisme(); modulInisiasi.mekanisme=true; }
+        if(id==='impregnasi' && !modulInisiasi.impregnasi) { initImpregnasi(); modulInisiasi.impregnasi=true; }
+        if(id==='fermi' && !modulInisiasi.fermi) { initFermi(); modulInisiasi.fermi=true; }
+        window.dispatchEvent(new Event('resize'));
+    }, 100);
+}
+
+function updateBottomNav() {
+    const navContainer = document.getElementById('bottom-nav');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+
+    if (currentStepIdx === 0) {
+        navContainer.style.display = 'none'; // Sembunyikan saat di Cover
+    } else {
+        navContainer.style.display = 'flex';
+        btnPrev.style.visibility = currentStepIdx > 1 ? 'visible' : 'hidden'; // Sembunyikan Prev di Menu 1
+        btnNext.style.visibility = currentStepIdx < 4 ? 'visible' : 'hidden'; // Sembunyikan Next di Menu Terakhir
+    }
+}
+
+function goPrev() {
+    if (currentStepIdx > 1) bukaMenu(steps[currentStepIdx - 1]);
+}
+
+function goNext() {
+    if (currentStepIdx > 0 && currentStepIdx < 4) bukaMenu(steps[currentStepIdx + 1]);
+}
+
+// ===================== MODUL 1: IMPREGNASI =====================
+let scImp, camImp, renImp, grpIon, daftarIon=[];
+function initImpregnasi() {
+    const wadah=document.getElementById('wadah-impregnasi');
+    scImp=new THREE.Scene(); scImp.background=null;
+    const w = wadah.clientWidth || 800; const h = wadah.clientHeight || 500;
+    camImp=new THREE.PerspectiveCamera(40,w/h,0.1,100); camImp.position.set(0,8,18);
+    renImp=new THREE.WebGLRenderer({antialias:true,alpha:true}); renImp.setSize(w,h); wadah.appendChild(renImp.domElement);
+    const orbImp=new THREE.OrbitControls(camImp,renImp.domElement); 
+    orbImp.target.set(0,0,0);
+    scImp.add(new THREE.AmbientLight(0xffffff,0.8));
+    const dl=new THREE.DirectionalLight(0xffffff,0.6); dl.position.set(5,10,5); scImp.add(dl);
+
+    const surfaceGroup = new THREE.Group();
+    const topGeom = new THREE.RingGeometry(3.5, 12, 32); topGeom.rotateX(-Math.PI/2);
+    const topMesh = new THREE.Mesh(topGeom, new THREE.MeshStandardMaterial({color:0x64748b, side:THREE.DoubleSide}));
+    topMesh.position.y = 1; surfaceGroup.add(topMesh);
+    
+    const wallGeom = new THREE.CylinderGeometry(3.5, 3.5, 2, 32, 1, true);
+    const wallMesh = new THREE.Mesh(wallGeom, new THREE.MeshStandardMaterial({color:0x475569, side:THREE.BackSide}));
+    wallMesh.position.y = 0; surfaceGroup.add(wallMesh);
+    
+    const botGeom = new THREE.CircleGeometry(3.5, 32); botGeom.rotateX(-Math.PI/2);
+    const botMesh = new THREE.Mesh(botGeom, new THREE.MeshStandardMaterial({color:0x334155}));
+    botMesh.position.y = -1; surfaceGroup.add(botMesh);
+    scImp.add(surfaceGroup);
+    grpIon=new THREE.Group(); scImp.add(grpIon);
+
+    function animate(){
+        requestAnimationFrame(animate); orbImp.update();
+        daftarIon.forEach(ion=>{ if(ion.mesh.position.y > ion.targetY) ion.mesh.position.y -= ion.speed; });
+        renImp.render(scImp,camImp);
+    }
+    animate();
+}
+
+function mulaiImpregnasi(tipe) {
+    while(grpIon.children.length>0) grpIon.remove(grpIon.children[0]); daftarIon=[];
+    const desc=document.getElementById('deskripsi-impreg');
+    
+    const getRandPos = (radius) => {
+        const r = Math.random() * radius; const theta = Math.random() * 2 * Math.PI;
+        return { x: r * Math.cos(theta), z: r * Math.sin(theta) };
+    };
+
+    if(tipe==='sequential') {
+        desc.innerHTML = TEKS_IMPREGNASI_SATU_SATU;
+        for(let i=0;i<12;i++) { const pos = getRandPos(2.5); spawnIon(0xbfcfe8, pos.x, pos.z, 8 + Math.random()*2, -0.6 + Math.random()*0.2, 0.06); }
+        setTimeout(()=> { for(let i=0;i<10;i++) { const pos = getRandPos(2.5); spawnIon(0x86efac, pos.x, pos.z, 8 + Math.random()*2, 0.2 + Math.random()*0.3, 0.06); } }, 1500);
+        setTimeout(()=> { for(let i=0;i<8;i++) { const pos = getRandPos(4.5); spawnIon(0xfca5a5, pos.x, pos.z, 8 + Math.random()*2, 1.4 + Math.random()*0.2, 0.06); } }, 3000);
+    } else {
+        desc.innerHTML = TEKS_IMPREGNASI_SERENTAK;
+        for(let i=0;i<10;i++) { const p = getRandPos(2.5); spawnIon(0xbfcfe8, p.x, p.z, 8+Math.random()*4, -0.6+Math.random()*0.9, 0.05); }
+        for(let i=0;i<10;i++) { const p = getRandPos(2.5); spawnIon(0x86efac, p.x, p.z, 8+Math.random()*4, -0.6+Math.random()*0.9, 0.05); }
+        for(let i=0;i<10;i++) { const p = getRandPos(2.5); spawnIon(0xfca5a5, p.x, p.z, 8+Math.random()*4, -0.6+Math.random()*0.9, 0.05); }
+    }
+}
+function spawnIon(color, x, z, startY, targetY, speed) {
+    const m=new THREE.Mesh(new THREE.SphereGeometry(0.35,16,16), new THREE.MeshStandardMaterial({color:color}));
+    m.position.set(x, startY, z); grpIon.add(m); daftarIon.push({mesh:m, targetY:targetY, speed:speed});
+}
+
+// ===================== MODUL 2: KRISTAL & MILLER =====================
+let scKristal, camKristal, renKristal, grpKristal, planeMesh;
+let matPt, matNi, matM2, matFe, matCo, matCr, matMn;
+let komposisi = { pt:60, ni:20, m:20 };
+
+function initKristal() {
+    const wadah = document.getElementById('wadah-kristal');
+    if (!wadah) return;
+    scKristal = new THREE.Scene(); scKristal.background = null;
+    const w = wadah.clientWidth || 500; const h = wadah.clientHeight || 500;
+
+    camKristal = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
+    camKristal.position.set(7, 6, 9); 
+    
+    renKristal = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    renKristal.setPixelRatio(window.devicePixelRatio);
+    renKristal.setSize(w, h);
+    wadah.appendChild(renKristal.domElement);
+    
+    const controls = new THREE.OrbitControls(camKristal, renKristal.domElement);
+    controls.enableDamping = true;
+    controls.target.set(2, 2, 2); 
+    
+    scKristal.add(new THREE.AmbientLight(0xffffff, 0.9));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(10,10,10); scKristal.add(dl);
+    const dl2 = new THREE.DirectionalLight(0xaabcff, 0.4); dl2.position.set(-5,-5,5); scKristal.add(dl2);
+    
+    scKristal.add(new THREE.AxesHelper(6));
+    grpKristal = new THREE.Group(); scKristal.add(grpKristal);
+    
+    matPt = new THREE.MeshStandardMaterial({ color:0xbfcfe8, metalness:0.7, roughness:0.25 });
+    matNi = new THREE.MeshStandardMaterial({ color:0x86efac, metalness:0.6, roughness:0.3 });
+    matM2 = new THREE.MeshStandardMaterial({ color:0xfca5a5, metalness:0.6, roughness:0.3 });
+    matFe = new THREE.MeshStandardMaterial({ color:0xfcd34d, metalness:0.5, roughness:0.4 });
+    matCo = new THREE.MeshStandardMaterial({ color:0x93c5fd, metalness:0.5, roughness:0.35 });
+    matCr = new THREE.MeshStandardMaterial({ color:0xc4b5fd, metalness:0.5, roughness:0.35 });
+    matMn = new THREE.MeshStandardMaterial({ color:0xfbb6b6, metalness:0.5, roughness:0.4 });
+    
+    ['miller-h', 'miller-k', 'miller-l'].forEach(id => { document.getElementById(id).addEventListener('input', updateLabelMiller); });
+    
+    new ResizeObserver(() => {
+        if(wadah.clientWidth>0) {
+            camKristal.aspect = wadah.clientWidth/wadah.clientHeight;
+            camKristal.updateProjectionMatrix();
+            renKristal.setSize(wadah.clientWidth, wadah.clientHeight);
+        }
+    }).observe(wadah);
+    
+    function animate() { requestAnimationFrame(animate); controls.update(); renKristal.render(scKristal, camKristal); }
+    animate(); updateModulKristal(); updateLabelMiller();
+}
+
+function updateLabelMiller() {
+    const h = document.getElementById('miller-h').value || '0';
+    const k = document.getElementById('miller-k').value || '0';
+    const l = document.getElementById('miller-l').value || '0';
+    const label = document.getElementById('miller-label');
+    if (label) label.innerText = `Bidang (${h}${k}${l})`;
+}
+
+function terapkanKomposisi() {
+    komposisi = {
+        pt: parseFloat(document.getElementById('input-pt').value) || 0,
+        ni: parseFloat(document.getElementById('input-ni').value) || 0,
+        m:  parseFloat(document.getElementById('input-m').value) || 0
+    };
+    generateLattice();
+}
+
+function updateModulKristal() {
+    const j=document.getElementById('pilih-logam').value;
+    document.getElementById('panel-komposisi').style.display = (j==='ptnim') ? 'flex' : 'none';
+    generateLattice(); clearMillerPlane();
+}
+
+function generateLattice() {
+    if(!grpKristal) return;
+    while(grpKristal.children.length>0) grpKristal.remove(grpKristal.children[0]);
+    
+    const jenis = document.getElementById('pilih-logam').value;
+    const a = 4; // Ukuran satu Unit Cell
+    let atomCoords = [];
+    
+    if(jenis==='ptnim'||jenis==='pt'||jenis==='ni') { // FCC
+        const corners = [[0,0,0],[a,0,0],[0,a,0],[a,a,0],[0,0,a],[a,0,a],[0,a,a],[a,a,a]];
+        const faces   = [[a/2,a/2,0],[a/2,a/2,a],[a/2,0,a/2],[a/2,a,a/2],[0,a/2,a/2],[a,a/2,a/2]];
+        atomCoords.push(...corners, ...faces);
+    } else if(jenis==='fe'||jenis==='cr'||jenis==='mn') { // BCC
+        const corners = [[0,0,0],[a,0,0],[0,a,0],[a,a,0],[0,0,a],[a,0,a],[0,a,a],[a,a,a]];
+        atomCoords.push(...corners, [a/2, a/2, a/2]);
+    } else if(jenis==='co') { // HCP Simplified
+        atomCoords.push([0,0,0],[a,0,0],[0,0,a],[a,0,a],[a/2,0,a/2]);
+        atomCoords.push([a/2,a/2,0],[a/2,a/2,a],[0,a/2,a/2],[a,a/2,a/2]);
+        atomCoords.push([0,a,0],[a,a,0],[0,a,a],[a,a,a],[a/2,a,a/2]);
+    }
+    
+    drawLatticeBox(a, a, a);
+
+    const total = komposisi.pt + komposisi.ni + komposisi.m;
+    const pPt = total > 0 ? (komposisi.pt / total) * 100 : 33.3;
+    const pNi = total > 0 ? (komposisi.ni / total) * 100 : 33.3;
+
+    // Perkecil sedikit ukuran atom agar bidang lebih terlihat
+    const geomSphere = new THREE.SphereGeometry(0.35, 24, 24);
+    atomCoords.forEach(pos => {
+        let mat = matPt;
+        if(jenis==='fe') mat=matFe;
+        else if(jenis==='ni') mat=matNi;
+        else if(jenis==='co') mat=matCo;
+        else if(jenis==='cr') mat=matCr;
+        else if(jenis==='mn') mat=matMn;
+        else if(jenis==='ptnim') {
+            const prob=Math.random()*100;
+            mat = prob < pPt ? matPt : (prob < pPt + pNi ? matNi : matM2);
+        }
+        const mesh=new THREE.Mesh(geomSphere, mat.clone());
+        mesh.position.set(pos[0],pos[1],pos[2]); grpKristal.add(mesh);
+    });
+}
+
+function drawLatticeBox(sx,sy,sz) {
+    const boxGeom = new THREE.BoxGeometry(sx, sy, sz);
+    const edgesGeom = new THREE.EdgesGeometry(boxGeom);
+    const line = new THREE.LineSegments(edgesGeom, new THREE.LineBasicMaterial({color:0x93c5fd, linewidth:2}));
+    line.position.set(sx/2, sy/2, sz/2); // Center of the 0 to a cube
+    grpKristal.add(line);
+}
+
+function applyMillerPlane() {
+    clearMillerPlane();
+    updateLabelMiller();
+    const h=parseInt(document.getElementById('miller-h').value)||0;
+    const k=parseInt(document.getElementById('miller-k').value)||0;
+    const l=parseInt(document.getElementById('miller-l').value)||0;
+    
+    if(h===0 && k===0 && l===0) return; // Invalid
+
+    const a = 4; // Ukuran lattice bounding box
+    
+    // Titik potong virtual agar dapat mencakup plane negatif
+    const oX = h < 0 ? a : 0;
+    const oY = k < 0 ? a : 0;
+    const oZ = l < 0 ? a : 0;
+
+    // Evaluasi jarak titik ke bidang h(x-oX) + k(y-oY) + l(z-oZ) = a
+    function evalPlane(x, y, z) {
+        return h * (x - oX) + k * (y - oY) + l * (z - oZ) - a;
+    }
+
+    // Definisi 12 Rusuk dari Box 0->a
+    const edges = [
+        [[0,0,0],[a,0,0]], [[0,a,0],[a,a,0]], [[0,0,a],[a,0,a]], [[0,a,a],[a,a,a]],
+        [[0,0,0],[0,a,0]], [[a,0,0],[a,a,0]], [[0,0,a],[0,a,a]], [[a,0,a],[a,a,a]],
+        [[0,0,0],[0,0,a]], [[a,0,0],[a,0,a]], [[0,a,0],[0,a,a]], [[a,a,0],[a,a,a]]
+    ];
+
+    let rawPoints = [];
+
+    // Cari interseksi (potongan) bidang di sepanjang rusuk kotak struktur kristal
+    edges.forEach(edge => {
+        const [p1, p2] = edge;
+        const v1 = evalPlane(...p1);
+        const v2 = evalPlane(...p2);
+
+        if(v1 * v2 <= 0) { // Berbeda tanda, berarti bidang memotong garis ini
+            if (v1 === 0 && v2 === 0) {
+                rawPoints.push(new THREE.Vector3(...p1), new THREE.Vector3(...p2));
+            } else if (v1 === 0) {
+                rawPoints.push(new THREE.Vector3(...p1));
+            } else if (v2 === 0) {
+                rawPoints.push(new THREE.Vector3(...p2));
+            } else {
+                const t = v1 / (v1 - v2);
+                const px = p1[0] + t * (p2[0] - p1[0]);
+                const py = p1[1] + t * (p2[1] - p1[1]);
+                const pz = p1[2] + t * (p2[2] - p1[2]);
+                rawPoints.push(new THREE.Vector3(px, py, pz));
+            }
+        }
+    });
+
+    // Buang titik duplikat
+    const uniquePoints = [];
+    rawPoints.forEach(pt => {
+        let isDuplicate = false;
+        for (let uPt of uniquePoints) {
+            if (uPt.distanceTo(pt) < 0.001) { isDuplicate = true; break; }
+        }
+        if (!isDuplicate) uniquePoints.push(pt);
+    });
+
+    if (uniquePoints.length < 3) return; // Tidak bisa membentuk poligon utuh
+
+    // Mengurutkan titik potong agar membentuk poligon tertutup yang tepat
+    const center = new THREE.Vector3(0,0,0);
+    uniquePoints.forEach(pt => center.add(pt));
+    center.divideScalar(uniquePoints.length);
+
+    const normal = new THREE.Vector3(h, k, l).normalize();
+    const u = new THREE.Vector3().subVectors(uniquePoints[0], center).normalize();
+    const v = new THREE.Vector3().crossVectors(normal, u).normalize();
+
+    uniquePoints.sort((pA, pB) => {
+        const vecA = new THREE.Vector3().subVectors(pA, center);
+        const vecB = new THREE.Vector3().subVectors(pB, center);
+        const angleA = Math.atan2(vecA.dot(v), vecA.dot(u));
+        const angleB = Math.atan2(vecB.dot(v), vecB.dot(u));
+        return angleA - angleB;
+    });
+
+    // Render Geometri Bidang
+    const geom = new THREE.BufferGeometry();
+    const vertices = [];
+    for(let i=1; i<uniquePoints.length-1; i++) {
+        vertices.push(
+            uniquePoints[0].x, uniquePoints[0].y, uniquePoints[0].z,
+            uniquePoints[i].x, uniquePoints[i].y, uniquePoints[i].z,
+            uniquePoints[i+1].x, uniquePoints[i+1].y, uniquePoints[i+1].z
+        );
+    }
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geom.computeVertexNormals();
+
+    planeMesh = new THREE.Group();
+    const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({
+        color: 0x3b82f6, side: THREE.DoubleSide, transparent: true, opacity: 0.65, roughness: 0.2
+    }));
+    planeMesh.add(mesh);
+
+    // Tambahkan bingkai/border pada potongan bidang
+    const edgeGeom = new THREE.EdgesGeometry(geom);
+    const border = new THREE.LineSegments(edgeGeom, new THREE.LineBasicMaterial({color: 0x1e3a5f, linewidth: 3}));
+    planeMesh.add(border);
+
+    grpKristal.add(planeMesh);
+}
+
+function clearMillerPlane() {
+    if(planeMesh && grpKristal) { grpKristal.remove(planeMesh); planeMesh = null; }
+}
+
+// ===================== MODUL 3: MEKANISME =====================
+let scMech, camMech, renMech, grpMech, molekulMCH;
+function initMekanisme() {
+    const wadah = document.getElementById('wadah-mekanisme');
+    if(!wadah) return;
+    scMech = new THREE.Scene(); scMech.background = null;
+    const w = wadah.clientWidth || 500, h = wadah.clientHeight || 500;
+    camMech = new THREE.PerspectiveCamera(45, w/h, 0.1, 100); camMech.position.set(0,5,10);
+    renMech = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    renMech.setSize(w, h); wadah.appendChild(renMech.domElement);
+    const controls = new THREE.OrbitControls(camMech, renMech.domElement);
+    scMech.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.6); dl.position.set(5,10,5); scMech.add(dl);
+
+    const surface = new THREE.Mesh(new THREE.BoxGeometry(8, 0.5, 8), new THREE.MeshStandardMaterial({color: 0x94a3b8}));
+    surface.position.y = -0.25; scMech.add(surface);
+
+    grpMech = new THREE.Group(); scMech.add(grpMech);
+
+    molekulMCH = new THREE.Mesh(new THREE.SphereGeometry(0.8,16,16), new THREE.MeshStandardMaterial({color: 0x3b82f6})); 
+    molekulMCH.position.set(0, 5, 0); grpMech.add(molekulMCH);
+
+    function animate() { requestAnimationFrame(animate); controls.update(); renMech.render(scMech, camMech); }
+    animate();
+}
+
+function setMechState(state) {
+    document.getElementById('deskripsi-mech').innerHTML = TEKS_MEKANISME[state];
+    for(let i=1;i<=5;i++) document.getElementById('btn-mech-'+i).classList.remove('active');
+    document.getElementById('btn-mech-'+state).classList.add('active');
+
+    // MCH Simulation Mockup
+    if(state === 1) { molekulMCH.position.set(0, 4, 0); molekulMCH.material.color.setHex(0x3b82f6); }
+    if(state === 2) { molekulMCH.position.set(0, 0.6, 0); }
+    if(state === 3) { molekulMCH.material.color.setHex(0xf59e0b); } // MCH bereaksi menjadi Toluena (ubah warna)
+    if(state === 4) { molekulMCH.position.set(0, 2, 0); }
+    if(state === 5) { molekulMCH.position.set(0, 5, 0); }
+}
+
+// ===================== MODUL 4: FERMI LEVEL =====================
+let ctxFermi;
+function initFermi() {
+    const canvas = document.getElementById('canvas-fermi');
+    if(!canvas) return;
+    canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+    ctxFermi = canvas.getContext('2d');
+    animasiFermi();
+}
+
+function animasiFermi() {
+    if(!ctxFermi) return;
+    const jenis = document.getElementById('pilih-fermi').value;
+    const sliderPanel = document.getElementById('panel-slider-fermi');
+    const desc = document.getElementById('deskripsi-fermi');
+
+    let shift = 0;
+    if(jenis === 'pt') { sliderPanel.style.display='none'; desc.innerHTML=TEKS_FERMI_PT; shift = -30; }
+    else if(jenis === 'ptni') { sliderPanel.style.display='none'; desc.innerHTML=TEKS_FERMI_PTNI; shift = 10; }
+    else { sliderPanel.style.display='flex'; desc.innerHTML=TEKS_FERMI_PTNIM; shift = parseInt(document.getElementById('slider-manual-fermi').value); }
+
+    const w = ctxFermi.canvas.width; const h = ctxFermi.canvas.height;
+    ctxFermi.clearRect(0,0,w,h);
+
+    ctxFermi.beginPath(); ctxFermi.moveTo(50, h/2); ctxFermi.lineTo(w-50, h/2);
+    ctxFermi.strokeStyle = '#ef4444'; ctxFermi.lineWidth = 2; ctxFermi.setLineDash([5,5]); ctxFermi.stroke(); ctxFermi.setLineDash([]);
+    ctxFermi.fillStyle = '#ef4444'; ctxFermi.font = '14px Poppins'; ctxFermi.fillText("Level Fermi (E_f)", 50, h/2 - 10);
+
+    const dBandY = h/2 + 40 + shift;
+    ctxFermi.beginPath(); ctxFermi.moveTo(50, dBandY); ctxFermi.lineTo(w-50, dBandY);
+    ctxFermi.strokeStyle = '#3b82f6'; ctxFermi.lineWidth = 3; ctxFermi.stroke();
+    ctxFermi.fillStyle = '#3b82f6'; ctxFermi.fillText("Pusat d-band (ε_d)", 50, dBandY - 10);
+
+    ctxFermi.beginPath(); ctxFermi.moveTo(50, h); ctxFermi.quadraticCurveTo(w/2, dBandY - 100, w-50, h);
+    ctxFermi.fillStyle = 'rgba(59,130,246,0.2)'; ctxFermi.fill();
+}
+</script>
+</body>
+</html>
